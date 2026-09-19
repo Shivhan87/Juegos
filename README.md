@@ -78,6 +78,43 @@ Se puede **arrastrar** el objeto hasta Osito o, si le cuesta motrizmente,
 **tocar el objeto y después a Osito**. Las dos rutas hacen exactamente lo mismo;
 no hay que elegir ni configurarlo.
 
+### La voz
+
+La voz sintética del móvil es el punto débil de cualquier juego así: la prosodia
+en español es mala y un niño que está aprendiendo a hablar necesita un modelo
+bueno. Hay tres opciones, en el panel de adultos → **Tu voz**:
+
+**1. Mi voz (lo mejor).** Una grabadora integrada: mantienes pulsado, dices la
+palabra, la sueltas y pasa sola a la siguiente. Voz familiar, entonación real y
+puedes exagerar los labios donde te convenga.
+
+Solo se graban **palabras sueltas**, no frases. Las frases se montan encadenando
+tus clips, que es justo lo que interesa: el niño oye «come… manzana» segmentado,
+en el mismo ritmo en el que se iluminan los pictogramas de la tira. Para el
+nivel 3 la voz sintética dice la frase completa y bien construida («Osito come
+la manzana») mientras que con tu voz suena segmentada; las dos cosas son
+correctas para lo que hace cada una.
+
+El vocabulario está agrupado **por habitación**, así que no hay que grabarlo todo
+para empezar: la cocina son ocho clips, menos de un minuto, y esa escena ya
+funciona entera con tu voz. En total son unas 69 palabras. Lo que falte lo cubre
+la voz del móvil, y el panel lleva la cuenta de lo grabado.
+
+**2. Voz del móvil.** Si se usa, conviene instalar una voz «mejorada», que es
+gratis y suena bastante mejor que la de fábrica: en iPhone/iPad, Ajustes →
+Accesibilidad → Contenido hablado → Voces → Español → *Mónica (Mejorada)*; en
+Android, Ajustes → Sistema → Idiomas → Salida de texto a voz → Google. También
+se puede ajustar velocidad y tono.
+
+**3. «La digo yo».** El juego se queda mudo: solo marca con un tono suave cuándo
+toca cada palabra, y la dices tú en directo. Es lo que haría una logopeda, y no
+requiere grabar nada.
+
+Detalles: las grabaciones se guardan en **IndexedDB**, es decir en ese
+dispositivo y ese navegador, y se pierden si se borran los datos del navegador.
+El micrófono necesita https o el fichero abierto desde el propio dispositivo. Si
+le cambias el nombre a Osito habrá que regrabar las dos frases que lo contienen.
+
 ### Ajustes
 
 Manteniendo pulsada la rueda ⚙️: nivel, **nombre de Osito** (se le puede poner el
@@ -101,10 +138,13 @@ petición con pompas de jabón que entrena pedir «más».
 
 ## Notas técnicas
 
-- Voz con `SpeechSynthesis` del propio dispositivo. Si no hay voz en español
+- Voz grabada por el adulto en `MediaRecorder`, guardada como blobs en
+  `IndexedDB` y reproducida por Web Audio (`decodeAudioData` + `BufferSource`),
+  que en iOS es mucho más fiable que un `<audio>` suelto. Todo lo que suena pasa
+  por una sola función, que decide entre clip grabado, voz sintética o silencio.
+- Respaldo con `SpeechSynthesis` del propio dispositivo. Si no hay voz en español
   instalada, los juegos avisan en el panel de adultos y siguen funcionando:
-  dibujos, frase escrita y premio sonoro. Decir tú las palabras en voz alta
-  funciona mejor que cualquier síntesis.
+  dibujos, frase escrita y premio sonoro.
 - El premio se genera con Web Audio; no hay ficheros de audio.
 - Los dibujos son emoji del sistema: nada que descargar, nítidos a cualquier
   tamaño.

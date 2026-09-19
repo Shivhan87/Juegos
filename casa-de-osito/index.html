@@ -206,6 +206,26 @@
   :root[data-theme="dark"] .warn{background:#3A231A;color:#F2C0A8}
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .warn{background:#3A231A;color:#F2C0A8}}
 
+  /* ---------------- grabadora ---------------- */
+  #rec{gap:14px}
+  .reccard{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+           gap:10px;background:var(--surface);border-radius:var(--r);padding:18px 14px;box-shadow:0 2px 8px var(--shadow);text-align:center}
+  .reccard .re{font-size:min(20vh,28vw);line-height:1}
+  .reccard .rt{font-family:'Baloo 2',sans-serif;font-weight:600;font-size:clamp(26px,8vw,46px);line-height:1.1}
+  .reccard .rs{font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+  .reccard .rs.done{color:var(--ok)}
+  .recbtn{flex:1;background:var(--accent);color:#fff;border-radius:20px;padding:18px 12px;
+          font-family:'Baloo 2',sans-serif;font-weight:600;font-size:clamp(16px,4.6vw,21px);
+          box-shadow:0 5px 0 rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;gap:9px}
+  .recbtn.on{background:#C62828;animation:pulserec .8s ease-in-out infinite}
+  @keyframes pulserec{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+  .recbtn[disabled]{opacity:.45}
+  .recerr{background:#FFF0EA;color:#8A3B23;border-radius:13px;padding:12px;font-size:14px;line-height:1.5;font-weight:600}
+  :root[data-theme="dark"] .recerr{background:#3A231A;color:#F2C0A8}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .recerr{background:#3A231A;color:#F2C0A8}}
+  .vprog{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+  .vprog i{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+
   .spark{position:fixed;pointer-events:none;font-size:28px;z-index:120;animation:fly .95s ease-out forwards}
   @keyframes fly{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(1.25);opacity:0}}
 
@@ -308,7 +328,25 @@
     </div>
 
     <div class="box2">
-      <h3>Voz</h3>
+      <h3>Tu voz</h3>
+      <div class="row">
+        <label>Quién habla</label>
+        <div class="seg" id="vmSeg">
+          <button data-v="mine" aria-pressed="false">Mi voz</button>
+          <button data-v="tts" aria-pressed="false">La del móvil</button>
+          <button data-v="self" aria-pressed="false">La digo yo</button>
+        </div>
+      </div>
+      <div class="vprog"><i id="vBar"></i></div>
+      <p class="note" id="vCount"></p>
+      <button class="go" id="openRec" style="font-size:18px;padding:14px 22px;align-self:flex-start;box-shadow:0 6px 0 rgba(0,0,0,.16)">🎙️ Grabar mi voz</button>
+      <p class="note">Grabar tu voz es lo que más cambia el juego: la reconoce, tiene la entonación de casa y puedes exagerar los labios donde te interese. Las frases se montan encadenando tus palabras, que es justo el modelo que buscas: «come… manzana».<br><br>
+      <b>«La digo yo»</b> deja el juego mudo: solo marca con un tono suave cuándo toca cada palabra y la dices tú en directo. Es lo que haría una logopeda.<br><br>
+      Las grabaciones se guardan <b>en este dispositivo y este navegador</b>. Si borras los datos del navegador se pierden y hay que rehacerlas.</p>
+    </div>
+
+    <div class="box2">
+      <h3>Voz del móvil</h3>
       <div class="row">
         <label for="voiceSel">Voz del dispositivo</label>
         <select id="voiceSel"></select>
@@ -321,6 +359,17 @@
           <button data-v="0.92" aria-pressed="false">Normal</button>
         </div>
       </div>
+      <div class="row"><label>Tono</label>
+        <div class="seg" id="pitchSeg">
+          <button data-v="0.9" aria-pressed="false">Grave</button>
+          <button data-v="1.1" aria-pressed="false">Normal</button>
+          <button data-v="1.3" aria-pressed="false">Agudo</button>
+        </div>
+      </div>
+      <p class="note">Las voces «mejoradas» o «premium» suenan bastante mejor que la que trae el móvil de fábrica, y son gratis:<br>
+      · <b>iPhone/iPad</b>: Ajustes → Accesibilidad → Contenido hablado → Voces → Español → descargar <i>Mónica (Mejorada)</i>.<br>
+      · <b>Android</b>: Ajustes → Sistema → Idiomas → Salida de texto a voz → Google → instalar los datos de voz en español.<br>
+      Después vuelve aquí y elígela en la lista.</p>
       <div id="voiceWarn" class="warn" hidden>Este dispositivo no tiene voz en español instalada. El juego funciona igual (dibujos, tira de frase escrita y premio sonoro), pero di tú las palabras en voz alta: funciona mejor que cualquier voz sintética.</div>
     </div>
 
@@ -373,6 +422,28 @@
         · Esto acompaña; quien marca los objetivos es la logopeda o atención temprana.
       </p>
     </div>
+  </section>
+
+  <section class="screen" id="rec" hidden>
+    <div class="top">
+      <button class="rnd" data-go="panel" aria-label="Volver"><span aria-hidden="true">←</span></button>
+      <h2 class="display">Grabar mi voz</h2>
+      <span class="lvlbadge" id="recCount"></span>
+    </div>
+    <div class="recerr" id="recErr" hidden></div>
+    <div class="chips" id="recGroups"></div>
+    <div class="reccard">
+      <div class="re" id="recE" aria-hidden="true">🧸</div>
+      <div class="rt" id="recT"></div>
+      <div class="rs" id="recS"></div>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="recPrev" aria-label="Anterior"><span aria-hidden="true">◀</span></button>
+      <button class="recbtn" id="recBtn"><span aria-hidden="true">🎙️</span> Mantén y di la palabra</button>
+      <button class="ctl" id="recPlay" aria-label="Escuchar"><span aria-hidden="true">▶</span></button>
+      <button class="ctl" id="recNext" aria-label="Siguiente"><span aria-hidden="true">▶▶</span></button>
+    </div>
+    <button class="danger" id="recDel">Borrar esta grabación</button>
   </section>
 
 </div>
@@ -435,6 +506,7 @@
 
   var S = Object.assign({
     level:2, rate:0.78, pause:5, chime:true, motion:!reduce, voiceURI:null, name:'Osito',
+    voiceMode:'tts', pitch:1.1,
     scenes:{cocina:true, bano:true, cuarto:true, salon:true, parque:true}
   }, read('co.settings',{}));
 
@@ -464,14 +536,14 @@
         speechSynthesis.cancel();
         var u=new SpeechSynthesisUtterance(text);
         u.lang = voice?voice.lang:'es-ES'; if(voice) u.voice=voice;
-        u.rate = Math.max(0.4, Math.min(1.2, rate||S.rate)); u.pitch=1.1;
+        u.rate = Math.max(0.4, Math.min(1.2, rate||S.rate)); u.pitch=S.pitch||1.1;
         u.onend=fin; u.onerror=fin;
         speechSynthesis.speak(u);
         setTimeout(fin, 1200 + text.length*165);
       }catch(e){ setTimeout(fin,400); }
     });
   }
-  function shutUp(){ try{ speechSynthesis.cancel(); }catch(e){} }
+  function shutUp(){ try{ speechSynthesis.cancel(); }catch(e){} stopClip(); }
 
   /* =========================================================== audio */
   var actx=null;
@@ -497,6 +569,102 @@
       o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.18);
     }catch(e){}
   }
+
+  /* ============================================ grabaciones de voz */
+  // Las grabaciones son blobs en IndexedDB, indexados por el texto exacto que dicen.
+  // localStorage no sirve: son megas de audio.
+  var DB=null, haveClips={}, bufCache={}, curSrc=null;
+  function db(){
+    return new Promise(function(res,rej){
+      if(DB){ res(DB); return; }
+      try{
+        var r=indexedDB.open('co-voice',1);
+        r.onupgradeneeded=function(){ r.result.createObjectStore('clips'); };
+        r.onsuccess=function(){ DB=r.result; res(DB); };
+        r.onerror=function(){ rej(r.error); };
+      }catch(e){ rej(e); }
+    });
+  }
+  function tx(mode, fn){
+    return db().then(function(d){
+      return new Promise(function(res,rej){
+        var t=d.transaction('clips',mode), out=fn(t.objectStore('clips'));
+        t.oncomplete=function(){ res(out && out.result!==undefined ? out.result : out); };
+        t.onerror=function(){ rej(t.error); };
+      });
+    });
+  }
+  function clipPut(k,blob){ delete bufCache[k]; haveClips[k]=1;
+    return tx('readwrite',function(st){ return st.put(blob,k); }); }
+  function clipGet(k){ return tx('readonly',function(st){ return st.get(k); }); }
+  function clipDel(k){ delete bufCache[k]; delete haveClips[k];
+    return tx('readwrite',function(st){ return st.delete(k); }); }
+  function clipKeys(){ return tx('readonly',function(st){ return st.getAllKeys(); }); }
+
+  function loadClips(){
+    return clipKeys().then(function(keys){
+      haveClips={}; (keys||[]).forEach(function(k){ haveClips[k]=1; });
+    }).catch(function(){ haveClips={}; });
+  }
+
+  function loadBuf(k){
+    if(bufCache[k]) return Promise.resolve(bufCache[k]);
+    return clipGet(k).then(function(blob){
+      if(!blob) return null;
+      return blob.arrayBuffer().then(function(ab){
+        return new Promise(function(res){
+          var c=ac(); if(!c){ res(null); return; }
+          c.decodeAudioData(ab, function(buf){ bufCache[k]=buf; res(buf); }, function(){ res(null); });
+        });
+      });
+    }).catch(function(){ return null; });
+  }
+  function playBuf(buf){
+    return new Promise(function(res){
+      var c=ac(); if(!c||!buf){ res(); return; }
+      try{ if(c.state==='suspended') c.resume(); }catch(e){}
+      var src=c.createBufferSource(); src.buffer=buf; src.connect(c.destination);
+      curSrc=src;
+      src.onended=function(){ if(curSrc===src) curSrc=null; res(); };
+      src.start();
+      setTimeout(res, buf.duration*1000 + 500);
+    });
+  }
+  function stopClip(){ if(curSrc){ try{ curSrc.stop(); }catch(e){} curSrc=null; } }
+
+  // tono suave que marca el turno cuando la app no habla ("la digo yo")
+  function tick(){
+    var c=ac(); if(!c) return;
+    try{ if(c.state==='suspended') c.resume(); }catch(e){}
+    try{
+      var o=c.createOscillator(), g=c.createGain(), t=c.currentTime;
+      o.type='sine'; o.frequency.value=660;
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.07,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+0.22);
+    }catch(e){}
+  }
+
+  // Punto único por el que pasa todo lo que suena.
+  // parts = las piezas de la frase, una por pictograma; ttsText = la frase entera
+  // y bien construida, que es lo que conviene decirle a una voz sintética.
+  async function speak(parts, rate, ttsText){
+    if(typeof parts==='string') parts=[parts];
+    parts=(parts||[]).filter(Boolean);
+    if(!parts.length) return;
+    if(S.voiceMode==='self'){
+      for(var i=0;i<parts.length;i++){ tick(); await wait(Math.max(750, parts[i].length*75)); }
+      return;
+    }
+    if(S.voiceMode==='tts'){ await say(ttsText || parts.join(' '), rate); return; }
+    for(var j=0;j<parts.length;j++){
+      var buf = haveClips[parts[j]] ? await loadBuf(parts[j]) : null;
+      if(buf) await playBuf(buf); else await say(parts[j], rate);
+      if(j<parts.length-1) await wait(140);
+    }
+  }
+  // las piezas habladas son exactamente las de la tira de frase
+  function partsOf(p){ return tilesOf(p).map(function(t){ return t.t; }); }
 
   /* ======================================================= utilidades */
   var $=function(s){ return document.querySelector(s); };
@@ -567,7 +735,7 @@
     var nodes=$('#strip').children;
     for(var i=0;i<tiles.length;i++){
       if(nodes[i]) nodes[i].classList.add('on');
-      await say(tiles[i].t, S.rate*0.88);
+      await speak([tiles[i].t], S.rate*0.88);
       if(tk.stop) return false;
       if(!(await wait(160,tk))) return false;
       if(nodes[i]) nodes[i].classList.remove('on');
@@ -588,7 +756,8 @@
   var mode=1, sceneIx=0, lastProp=null;
   function show(id){
     newToken(); shutUp(); clearSel();
-    ['splash','home','play','panel'].forEach(function(s){ $('#'+s).hidden = (s!==id); });
+    ['splash','home','play','panel','rec'].forEach(function(s){ $('#'+s).hidden = (s!==id); });
+    if(id!=='rec') closeMic();
     if(id==='home'){ renderTally(); renderLvlBadge(); }
     if(id==='panel') renderPanel();
   }
@@ -596,7 +765,7 @@
     var b=e.target.closest('[data-go]');
     if(b) show(b.getAttribute('data-go'));
   });
-  $('#go').addEventListener('click', function(){ ac(); loadVoices(); say('hola',0.9); show('home'); });
+  $('#go').addEventListener('click', function(){ ac(); loadVoices(); loadClips().then(function(){ speak(['hola'],0.9); }); show('home'); });
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-mode]'), function(b){
     b.addEventListener('click', function(){
@@ -758,11 +927,10 @@
     if(!(await wait(500,tk))) return;
     if(!(await speakTiles(tiles,tk))) return;
     if(!(await wait(200,tk))) return;
-    var ph=phraseOf(p);
-    await say(ph, S.rate);
+    await speak(partsOf(p), S.rate, phraseOf(p));
     if(tk.stop) return;
     if(!(await expectPause(tk))) return;
-    await say(ph, S.rate);
+    await speak(partsOf(p), S.rate, phraseOf(p));
   }
 
   /* ===================================================== modo 2 */
@@ -771,6 +939,11 @@
     if(S.level===1) return 'Toca '+o.p.art+' '+o.p.w;
     if(o.dest==='bear') return 'Dale '+o.p.art+' '+o.p.w+' a '+S.name;
     return 'Guarda '+o.p.art+' '+o.p.w+' en la caja';
+  }
+  function orderParts(o){
+    if(S.level===1) return ['toca', o.p.w];
+    if(o.dest==='bear') return ['dale', o.p.w, 'a '+S.name];
+    return ['guarda', o.p.w, 'en la caja'];
   }
   function newOrder(){
     var props=scene().props.slice();
@@ -788,10 +961,10 @@
   async function askOrder(){
     var tk=newToken();
     if(!(await wait(280,tk))) return;
-    await say(orderText(order), S.rate);
+    await speak(orderParts(order), S.rate, orderText(order));
     if(tk.stop) return;
     if(!(await wait(420,tk))) return;
-    await say(order.p.w, S.rate*0.9);
+    await speak([order.p.w], S.rate*0.9);
   }
   async function checkOrder(p, target, el){
     newToken(); var tk=newToken();
@@ -807,11 +980,11 @@
       var tiles=tilesOf(p);
       renderStrip(tiles);
       $('#prompt').textContent='¡'+p.w+'!';
-      await say(pick(['¡sí!','¡muy bien!','¡eso es!']),0.95);
+      await speak([pick(['¡sí!','¡muy bien!','¡eso es!'])],0.95);
       if(tk.stop) return;
       if(!(await speakTiles(tiles,tk))) return;
       if(!(await wait(300,tk))) return;
-      await say(phraseOf(p), S.rate);
+      await speak(partsOf(p), S.rate, phraseOf(p));
       if(tk.stop) return;
       if(!(await expectPause(tk))) return;
       newOrder();
@@ -819,13 +992,13 @@
       blip(false);
       order.misses++;
       if(!okProp){
-        await say('ese es '+p.art+' '+p.w+'.', S.rate);
+        await speak(['ese es', p.w], S.rate, 'ese es '+p.art+' '+p.w+'.');
       }else{
-        await say(order.dest==='bear' ? ('a '+S.name+', dáselo a '+S.name+'.') : 'a la caja, guárdalo en la caja.', S.rate);
+        await speak(order.dest==='bear' ? ['a '+S.name] : ['en la caja'], S.rate);
       }
       if(tk.stop) return;
       if(!(await wait(300,tk))) return;
-      await say(orderText(order), S.rate);
+      await speak(orderParts(order), S.rate, orderText(order));
       if(tk.stop) return;
       if(order.misses>=2){
         Array.prototype.forEach.call($('#tray').children, function(n){
@@ -849,10 +1022,10 @@
     var tk=newToken();
     (async function(){
       if(!(await wait(300,tk))) return;
-      await say('vamos a montar la frase', S.rate);
+      await speak(['vamos a montar la frase'], S.rate);
       if(tk.stop) return;
       if(!(await wait(250,tk))) return;
-      await say(build.tiles[build.at].t, S.rate*0.9);
+      await speak([build.tiles[build.at].t], S.rate*0.9);
     })();
   }
   function drawBuild(){
@@ -886,7 +1059,7 @@
       blip(true);
       build.at++;
       drawBuild();
-      await say(t.t, S.rate*0.9);
+      await speak([t.t], S.rate*0.9);
       if(tk.stop) return;
       if(build.at>=build.tiles.length){
         renderStrip(build.tiles);
@@ -894,21 +1067,20 @@
         celebrate();
         if(!(await wait(400,tk))) return;
         if(!(await speakTiles(build.tiles,tk))) return;
-        var ph=phraseOf(build.p);
-        await say(ph, S.rate);
+        await speak(partsOf(build.p), S.rate, phraseOf(build.p));
         if(tk.stop) return;
         if(!(await expectPause(tk))) return;
-        await say(ph, S.rate);
+        await speak(partsOf(build.p), S.rate, phraseOf(build.p));
         if(tk.stop) return;
         if(!(await wait(900,tk))) return;
         newBuild();
       }else{
         if(!(await wait(250,tk))) return;
-        await say(build.tiles[build.at].t, S.rate*0.9);
+        await speak([build.tiles[build.at].t], S.rate*0.9);
       }
     }else{
       blip(false);
-      await say('ese es '+t.t+'. Busca '+want.t+'.', S.rate);
+      await speak(['ese es', t.t, 'busca', want.t], S.rate, 'ese es '+t.t+'. Busca '+want.t+'.');
     }
   }
 
@@ -927,7 +1099,7 @@
       var tk=newToken();
       (async function(){
         if(!(await wait(300,tk))) return;
-        await say(S.level===1?'dale algo a '+S.name:'¿qué le damos a '+S.name+'?', S.rate);
+        await speak(['¿qué le damos a '+S.name+'?'], S.rate);
       })();
     }else if(mode===2){
       $('#playTitle').textContent='Hazlo tú';
@@ -940,9 +1112,9 @@
   }
   $('#repeat').addEventListener('click', function(){
     if(mode===2 && order) askOrder();
-    else if(mode===3 && build) say(build.tiles[build.at]?build.tiles[build.at].t:phraseOf(build.p), S.rate);
-    else if(lastProp) say(phraseOf(lastProp), S.rate);
-    else say('¿qué le damos a '+S.name+'?', S.rate);
+    else if(mode===3 && build) speak([build.tiles[build.at] ? build.tiles[build.at].t : partsOf(build.p).join(' ')], S.rate);
+    else if(lastProp) speak(partsOf(lastProp), S.rate, phraseOf(lastProp));
+    else speak(['¿qué le damos a '+S.name+'?'], S.rate);
   });
   $('#again').addEventListener('click', function(){
     if(mode===1){ if(lastProp){ var p=lastProp; doAction(p,'bear',null); } else startMode(); }
@@ -953,12 +1125,12 @@
     newToken(); shutUp();
     bump(); celebrate(); $('#cue').hidden=true;
     var tk=newToken();
-    await say(pick(PRAISE), 0.95);
+    await speak([pick(PRAISE)], 0.95);
     if(tk.stop) return;
     var p = mode===3 ? (build&&build.p) : (mode===2 ? (order&&order.p) : lastProp);
     if(!p) return;
     if(!(await wait(300,tk))) return;
-    await say(phraseOf(p), S.rate);
+    await speak(partsOf(p), S.rate, phraseOf(p));
   });
 
   /* ======================================================== panel */
@@ -984,6 +1156,7 @@
   }
   seg('#lvlSeg','level',parseInt,function(){ renderLvlEx(); renderLvlBadge(); });
   seg('#rateSeg','rate',parseFloat,function(){ say('así hablo yo', S.rate); });
+  seg('#pitchSeg','pitch',parseFloat,function(){ say('así hablo yo', S.rate); });
   seg('#pauseSeg','pause',parseInt);
 
   function renderLvlEx(){
@@ -999,6 +1172,19 @@
     b.onclick=function(){ S[key]=!S[key]; saveS(); b.setAttribute('aria-pressed',S[key]?'true':'false'); if(key==='chime'&&S[key]) chime(); };
   }
   sw('#chimeSw','chime'); sw('#motionSw','motion');
+  seg('#vmSeg','voiceMode',String,function(){ renderVoiceProgress(); });
+
+  function renderVoiceProgress(){
+    var v=voiceProgress();
+    $('#vBar').style.width = v.total ? Math.round(v.done/v.total*100)+'%' : '0%';
+    if(!v.done){
+      $('#vCount').innerHTML='Nada grabado todavía. Son <b>'+v.total+'</b> palabras para las escenas que tienes activas, pero puedes grabar solo la cocina (ocho) y empezar a jugar.';
+    }else if(v.done<v.total){
+      $('#vCount').innerHTML='<b>'+v.done+'</b> de '+v.total+' grabadas. Lo que falte lo pone la voz del móvil.';
+    }else{
+      $('#vCount').innerHTML='<b>Todo grabado.</b> El juego habla enteramente con tu voz.';
+    }
+  }
 
   $('#nameIn').addEventListener('change', function(){
     var v=this.value.trim().slice(0,12);
@@ -1061,7 +1247,10 @@
     $('#chimeSw').setAttribute('aria-pressed',S.chime?'true':'false');
     $('#motionSw').setAttribute('aria-pressed',S.motion?'true':'false');
     $('#nameIn').value=S.name;
+    paintSeg('#vmSeg','voiceMode',String);
+    paintSeg('#pitchSeg','pitch',parseFloat);
     renderLvlEx(); renderSceneToggles(); renderWeek(); loadVoices();
+    loadClips().then(renderVoiceProgress);
   }
   $('#reset').addEventListener('click', function(){
     stats={}; write('co.stats',stats); renderWeek(); renderTally();
@@ -1069,9 +1258,167 @@
     setTimeout(function(){ self.textContent='Borrar el historial'; },1800);
   });
 
-  document.addEventListener('visibilitychange', function(){ if(document.hidden){ newToken(); shutUp(); } });
+  /* ==================================================== grabadora */
+  // El vocabulario se agrupa por habitación para poder empezar a jugar
+  // con una sola grabada: la cocina son ocho clips, menos de un minuto.
+  function vocabGroups(){
+    var g=[];
+    SCENES.forEach(function(sc){
+      var items=[], seen={};
+      sc.props.forEach(function(q){ if(!seen[q.w]){ seen[q.w]=1; items.push({t:q.w,e:q.e}); } });
+      sc.props.forEach(function(q){ if(!seen[q.v]){ seen[q.v]=1; items.push({t:q.v,e:q.ve}); } });
+      g.push({id:sc.id, name:sc.label, icon:sc.icon, items:items});
+    });
+    g.push({id:'frases', name:'frases', icon:'💬', items:[
+      {t:S.name,e:'🧸'}, {t:'a '+S.name,e:'🧸'}, {t:'¿qué le damos a '+S.name+'?',e:'🤔'},
+      {t:'hola',e:'👋'},
+      {t:'dale',e:'🫱'}, {t:'guarda',e:'📦'}, {t:'en la caja',e:'📦'}, {t:'toca',e:'👆'},
+      {t:'ese es',e:'👀'}, {t:'busca',e:'🔎'}, {t:'vamos a montar la frase',e:'🧩'},
+      {t:'¡sí!',e:'✅'}, {t:'¡eso es!',e:'✅'},
+      {t:'¡muy bien!',e:'🎉'}, {t:'¡bravo!',e:'🎉'}, {t:'¡qué bien lo dices!',e:'🎉'},
+      {t:'¡ole!',e:'🎉'}, {t:'¡sí, eso es!',e:'🎉'}, {t:'¡genial!',e:'🎉'}
+    ]});
+    return g;
+  }
+  function voiceProgress(){
+    var seen={}, total=0, done=0;
+    vocabGroups().forEach(function(g){
+      if(g.id!=='frases' && !S.scenes[g.id]) return;   // solo cuenta lo que está en juego
+      g.items.forEach(function(it){
+        if(seen[it.t]) return; seen[it.t]=1;
+        total++; if(haveClips[it.t]) done++;
+      });
+    });
+    return {done:done, total:total};
+  }
 
-  renderTally(); renderLvlBadge();
+  var RG=[], rgIx=0, riIx=0, micStream=null, mr=null, recChunks=[], recTimer=null, recording=false;
+  function curItem(){ var g=RG[rgIx]; return g ? g.items[riIx] : null; }
+
+  function openRec(){
+    RG=vocabGroups(); rgIx=0; riIx=0;
+    show('rec');
+    renderRecGroups(); renderRec();
+    askMic();
+  }
+  function askMic(){
+    var err=$('#recErr'), btn=$('#recBtn');
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+      err.hidden=false; btn.setAttribute('disabled','');
+      err.textContent='Este navegador no sabe grabar audio. Prueba con Chrome o Safari actualizados.';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+      micStream=st; err.hidden=true; btn.removeAttribute('disabled');
+    }).catch(function(){
+      err.hidden=false; btn.setAttribute('disabled','');
+      err.textContent='No hay acceso al micrófono. Dale permiso al navegador y vuelve a entrar aquí. Ojo: el micrófono solo funciona si la página se abre por https o desde el fichero guardado en el dispositivo.';
+    });
+  }
+  function closeMic(){
+    if(recording) stopRec();
+    if(micStream){ micStream.getTracks().forEach(function(t){ t.stop(); }); micStream=null; }
+  }
+
+  function renderRecGroups(){
+    var box=$('#recGroups'); box.innerHTML='';
+    RG.forEach(function(g,i){
+      var b=document.createElement('button');
+      b.className='chip'; b.setAttribute('aria-pressed', i===rgIx?'true':'false');
+      b.innerHTML='<span aria-hidden="true">'+g.icon+'</span>'+g.name;
+      b.onclick=function(){ rgIx=i; riIx=0; renderRecGroups(); renderRec(); };
+      box.appendChild(b);
+    });
+  }
+  function renderRec(){
+    var g=RG[rgIx], it=curItem();
+    if(!it) return;
+    $('#recE').textContent=it.e;
+    $('#recT').textContent=it.t;
+    var has=!!haveClips[it.t];
+    $('#recS').textContent = has ? '✓ grabado' : 'sin grabar';
+    $('#recS').className = 'rs'+(has?' done':'');
+    $('#recCount').textContent=(riIx+1)+' / '+g.items.length;
+    $('#recDel').hidden=!has;
+    $('#recPlay').style.opacity = has ? '1' : '.4';
+  }
+  function stepRec(d){
+    var g=RG[rgIx]; if(!g) return;
+    riIx+=d;
+    if(riIx>=g.items.length){
+      if(rgIx<RG.length-1){ rgIx++; riIx=0; renderRecGroups(); }
+      else riIx=g.items.length-1;
+    }
+    if(riIx<0){
+      if(rgIx>0){ rgIx--; riIx=RG[rgIx].items.length-1; renderRecGroups(); }
+      else riIx=0;
+    }
+    renderRec();
+  }
+
+  function pickMime(){
+    var c=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+    for(var i=0;i<c.length;i++){ try{ if(MediaRecorder.isTypeSupported(c[i])) return c[i]; }catch(e){} }
+    return '';
+  }
+  function flashRec(msg){
+    var el=$('#recS'); el.textContent=msg; el.className='rs';
+    setTimeout(renderRec, 1600);
+  }
+  function startRec(){
+    if(!micStream || recording) return;
+    var it=curItem(); if(!it) return;
+    shutUp(); recChunks=[]; recording=true;
+    var m=pickMime();
+    try{ mr = m ? new MediaRecorder(micStream,{mimeType:m}) : new MediaRecorder(micStream); }
+    catch(e){ recording=false; flashRec('no se puede grabar aquí'); return; }
+    mr.ondataavailable=function(e){ if(e.data && e.data.size) recChunks.push(e.data); };
+    mr.onstop=function(){ saveRec(it); };
+    mr.start();
+    $('#recBtn').classList.add('on');
+    $('#recS').textContent='grabando…'; $('#recS').className='rs';
+    recTimer=setTimeout(stopRec, 4000);
+  }
+  function stopRec(){
+    if(!recording) return;
+    recording=false;
+    if(recTimer){ clearTimeout(recTimer); recTimer=null; }
+    $('#recBtn').classList.remove('on');
+    try{ mr.stop(); }catch(e){}
+  }
+  function saveRec(it){
+    var blob=new Blob(recChunks, {type:(mr && mr.mimeType) || 'audio/webm'});
+    if(blob.size < 900){ flashRec('demasiado corto, otra vez'); return; }
+    clipPut(it.t, blob).then(function(){
+      if(S.voiceMode==='tts'){ S.voiceMode='mine'; saveS(); }  // en cuanto hay voz propia, se usa
+      renderRec();
+      return loadBuf(it.t);
+    }).then(function(buf){
+      return buf ? playBuf(buf) : null;
+    }).then(function(){
+      setTimeout(function(){ stepRec(1); }, 250);
+    }).catch(function(){ flashRec('no se ha podido guardar'); });
+  }
+
+  $('#recBtn').addEventListener('pointerdown', function(e){ e.preventDefault(); startRec(); });
+  document.addEventListener('pointerup', function(){ if(recording) stopRec(); });
+  document.addEventListener('pointercancel', function(){ if(recording) stopRec(); });
+  $('#recPrev').addEventListener('click', function(){ stepRec(-1); });
+  $('#recNext').addEventListener('click', function(){ stepRec(1); });
+  $('#recPlay').addEventListener('click', function(){
+    var it=curItem(); if(!it) return;
+    if(haveClips[it.t]) loadBuf(it.t).then(function(b){ if(b) playBuf(b); });
+    else say(it.t, S.rate);
+  });
+  $('#recDel').addEventListener('click', function(){
+    var it=curItem(); if(!it) return;
+    clipDel(it.t).then(renderRec);
+  });
+  $('#openRec').addEventListener('click', openRec);
+
+  document.addEventListener('visibilitychange', function(){ if(document.hidden){ newToken(); shutUp(); closeMic(); } });
+
+  renderTally(); renderLvlBadge(); loadClips();
 })();
 </script>
 <!--APP-END-->
