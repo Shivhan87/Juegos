@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Juegos</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;700&display=swap">
+<style>
+  :root{--ground:#E9F2F1;--surface:#fff;--ink:#20333A;--ink-soft:#5D7580;--shadow:rgba(32,51,58,.18);--c1:#FFC247}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#12191D;--surface:#1D262B;--ink:#E9F2F1;--ink-soft:#93AAB3;--shadow:rgba(0,0,0,.55)}}
+  :root[data-theme="dark"]{--ground:#12191D;--surface:#1D262B;--ink:#E9F2F1;--ink-soft:#93AAB3;--shadow:rgba(0,0,0,.55)}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--ground);color:var(--ink);
+       font-family:'Nunito',system-ui,sans-serif;padding:24px 16px;padding-block:40px}
+  main{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+  h1{font-family:'Fredoka',sans-serif;font-weight:600;font-size:clamp(32px,9vw,46px);margin:0;letter-spacing:-.01em}
+  p.lead{margin:0;color:var(--ink-soft);line-height:1.6;max-width:58ch}
+  a.game{display:flex;gap:18px;align-items:center;text-decoration:none;color:#17272D;
+         background:var(--c1);border-radius:26px;padding:20px 22px;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+  a.game:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+  a.game .ic{font-size:52px;line-height:1}
+  a.game b{display:block;font-family:'Fredoka',sans-serif;font-weight:600;font-size:24px}
+  a.game span{display:block;font-size:15px;opacity:.75;margin-top:4px;line-height:1.4}
+  footer{color:var(--ink-soft);font-size:13.5px;line-height:1.6}
+</style>
+</head>
+<body>
+<main>
+  <h1>Juegos</h1>
+  <p class="lead">Juegos caseros, sin instalación y sin conexión. Se abren en el navegador del móvil o de la tablet.</p>
+  <a class="game" href="dilo-conmigo/">
+    <span class="ic" aria-hidden="true">👄</span>
+    <span><b>Dilo conmigo</b><span>Estimulación del lenguaje para 2–3 años: sonidos, pausa expectante y refuerzo</span></span>
+  </a>
+  <footer>Sin anuncios, sin cuentas, sin datos fuera del dispositivo.</footer>
+</main>
+</body>
+</html>
