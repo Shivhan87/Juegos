@@ -110,10 +110,27 @@ se puede ajustar velocidad y tono.
 toca cada palabra, y la dices tú en directo. Es lo que haría una logopeda, y no
 requiere grabar nada.
 
-Detalles: las grabaciones se guardan en **IndexedDB**, es decir en ese
-dispositivo y ese navegador, y se pierden si se borran los datos del navegador.
-El micrófono necesita https o el fichero abierto desde el propio dispositivo. Si
-le cambias el nombre a Osito habrá que regrabar las dos frases que lo contienen.
+### Copia de seguridad de la voz
+
+Las grabaciones viven en IndexedDB, o sea en ese navegador y solo ahí: se
+pierden si se borran los datos de navegación. En el panel hay **Exportar** e
+**Importar**, que las empaquetan en un único `.json` (unos cientos de KB con
+todo grabado). Sirve para dos cosas: no perder media hora de trabajo, y llevar
+la misma voz del móvil a la tablet.
+
+La importación **fusiona**: añade las que falten y reemplaza las que coincidan,
+nunca borra lo que no venga en el fichero. Si la copia se grabó con otro nombre
+para Osito, avisa de que las frases con el nombre habrá que rehacerlas.
+
+La exportación tiene dos caminos, porque el visor de artifacts de claude.ai
+bloquea las descargas que inicia la propia página: si la página se abre ahí, usa
+la capacidad `downloads` de la plataforma (el visor pide confirmación); en
+cualquier otro sitio —el fichero guardado en el dispositivo, GitHub Pages— usa
+una descarga normal.
+
+Detalles: el micrófono necesita https o el fichero abierto desde el propio
+dispositivo. Si le cambias el nombre a Osito habrá que regrabar las dos frases
+que lo contienen.
 
 ### Ajustes
 
@@ -138,7 +155,7 @@ petición con pompas de jabón que entrena pedir «más».
 
 ## Notas técnicas
 
-- Voz grabada por el adulto en `MediaRecorder`, guardada como blobs en
+- Voz grabada por el adulto en `MediaRecorder` a 48 kbps, guardada como blobs en
   `IndexedDB` y reproducida por Web Audio (`decodeAudioData` + `BufferSource`),
   que en iOS es mucho más fiable que un `<audio>` suelto. Todo lo que suena pasa
   por una sola función, que decide entre clip grabado, voz sintética o silencio.

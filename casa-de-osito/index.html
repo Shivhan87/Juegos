@@ -319,6 +319,17 @@
     </div>
 
     <div class="box2">
+      <h3>Copia de seguridad de la voz</h3>
+      <p class="note">Las grabaciones viven en este navegador y desaparecen si borras sus datos. Guarda una copia en cuanto tengas unas cuantas: es un solo fichero, y sirve además para llevártelas a otro móvil o tablet.</p>
+      <div class="row" style="gap:8px">
+        <button class="ctl" id="bkExport" style="flex:1;font-size:16px;font-weight:800;padding:14px 10px">⬇️ Exportar</button>
+        <button class="ctl" id="bkImport" style="flex:1;font-size:16px;font-weight:800;padding:14px 10px">⬆️ Importar</button>
+      </div>
+      <input type="file" id="bkFile" accept=".json,application/json" hidden>
+      <p class="note" id="bkState"></p>
+    </div>
+
+    <div class="box2">
       <h3>Osito</h3>
       <div class="row">
         <label for="nameIn">Cómo se llama</label>
@@ -1369,9 +1380,11 @@
     if(!micStream || recording) return;
     var it=curItem(); if(!it) return;
     shutUp(); recChunks=[]; recording=true;
-    var m=pickMime();
-    try{ mr = m ? new MediaRecorder(micStream,{mimeType:m}) : new MediaRecorder(micStream); }
-    catch(e){ recording=false; flashRec('no se puede grabar aquí'); return; }
+    var m=pickMime(), opts={audioBitsPerSecond:48000};
+    if(m) opts.mimeType=m;
+    try{ mr = new MediaRecorder(micStream, opts); }
+    catch(e1){ try{ mr = m ? new MediaRecorder(micStream,{mimeType:m}) : new MediaRecorder(micStream); }
+      catch(e2){ recording=false; flashRec('no se puede grabar aquí'); return; } }
     mr.ondataavailable=function(e){ if(e.data && e.data.size) recChunks.push(e.data); };
     mr.onstop=function(){ saveRec(it); };
     mr.start();
@@ -1415,6 +1428,110 @@
     clipDel(it.t).then(renderRec);
   });
   $('#openRec').addEventListener('click', openRec);
+
+  /* ======================================= copia de seguridad de la voz */
+  function clipAll(){
+    return db().then(function(d){
+      return new Promise(function(res,rej){
+        var t=d.transaction('clips','readonly'), st=t.objectStore('clips');
+        var kq=st.getAllKeys(), vq=st.getAll();
+        t.oncomplete=function(){ res({keys:kq.result||[], vals:vq.result||[]}); };
+        t.onerror=function(){ rej(t.error); };
+      });
+    });
+  }
+  function bytesToB64(bytes){
+    var chunk=0x8000, out=[];
+    for(var i=0;i<bytes.length;i+=chunk) out.push(String.fromCharCode.apply(null, bytes.subarray(i,i+chunk)));
+    return btoa(out.join(''));
+  }
+  function b64ToBlob(b64, mime){
+    var bin=atob(b64), bytes=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    return new Blob([bytes], {type:mime||'audio/webm'});
+  }
+  function bkSay(msg){ $('#bkState').innerHTML=msg; }
+
+  function buildBackup(){
+    return clipAll().then(function(all){
+      var clips={}, pending=all.keys.map(function(k,i){
+        var blob=all.vals[i];
+        return blob.arrayBuffer().then(function(ab){
+          clips[k]={m:blob.type||'audio/webm', d:bytesToB64(new Uint8Array(ab))};
+        });
+      });
+      return Promise.all(pending).then(function(){
+        return new Blob([JSON.stringify({
+          app:'la-casa-de-osito', v:1, fecha:new Date().toISOString(),
+          nombre:S.name, clips:clips
+        })], {type:'application/json'});
+      });
+    });
+  }
+
+  $('#bkExport').addEventListener('click', async function(){
+    var n=Object.keys(haveClips).length;
+    if(!n){ bkSay('Todavía no hay ninguna grabación que guardar.'); return; }
+    bkSay('Preparando el fichero…');
+    var blob;
+    try{ blob=await buildBackup(); }
+    catch(e){ bkSay('No se ha podido leer las grabaciones.'); return; }
+    var kb=Math.max(1, Math.round(blob.size/1024));
+    var fname='voz-osito-'+today()+'.json';
+
+    // En el visor de artifacts las descargas normales son inertes: hay que
+    // pedírselo a la plataforma. Fuera de él (fichero local, Pages) no existe.
+    var dl=null;
+    try{ if(window.claude && window.claude.use) dl=await window.claude.use('downloads'); }catch(e){}
+    if(dl){
+      try{
+        await dl.save({filename:fname, data:blob});
+        bkSay('Guardado: <b>'+fname+'</b> ('+n+' grabaciones, '+kb+' KB).');
+        return;
+      }catch(err){
+        if(err && err.code==='declined'){ bkSay('Exportación cancelada.'); return; }
+        // cualquier otro fallo: se intenta la descarga normal
+      }
+    }
+    try{
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url; a.download=fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      bkSay('Descargando <b>'+fname+'</b> ('+n+' grabaciones, '+kb+' KB). Si no aparece nada, este visor no deja descargar: abre el juego desde el fichero guardado o desde su dirección web.');
+    }catch(e){
+      bkSay('Este navegador no ha dejado guardar el fichero.');
+    }
+  });
+
+  $('#bkImport').addEventListener('click', function(){ $('#bkFile').click(); });
+  $('#bkFile').addEventListener('change', async function(){
+    var f=this.files && this.files[0];
+    this.value='';
+    if(!f) return;
+    bkSay('Leyendo el fichero…');
+    var data;
+    try{ data=JSON.parse(await f.text()); }
+    catch(e){ bkSay('Ese fichero no se puede leer. Tiene que ser el <b>.json</b> que exportó este mismo juego.'); return; }
+    if(!data || data.app!=='la-casa-de-osito' || !data.clips){
+      bkSay('Ese fichero no es una copia de las grabaciones de Osito.'); return;
+    }
+    var keys=Object.keys(data.clips), nuevas=0, reemplazadas=0;
+    for(var i=0;i<keys.length;i++){
+      var k=keys[i], c=data.clips[k];
+      if(!c || !c.d) continue;
+      if(haveClips[k]) reemplazadas++; else nuevas++;
+      try{ await clipPut(k, b64ToBlob(c.d, c.m)); }catch(e){}
+    }
+    await loadClips();
+    renderVoiceProgress();
+    if(S.voiceMode==='tts' && Object.keys(haveClips).length){ S.voiceMode='mine'; saveS(); paintSeg('#vmSeg','voiceMode',String); }
+    var aviso = (data.nombre && data.nombre!==S.name)
+      ? ' Ojo: esa copia se grabó llamándole <b>'+data.nombre+'</b> y aquí se llama <b>'+S.name+'</b>; las frases con el nombre habrá que regrabarlas o cambiarle el nombre.'
+      : '';
+    bkSay('Importadas <b>'+nuevas+'</b> grabaciones nuevas'+(reemplazadas?' y reemplazadas '+reemplazadas:'')+'.'+aviso);
+  });
 
   document.addEventListener('visibilitychange', function(){ if(document.hidden){ newToken(); shutUp(); closeMic(); } });
 
