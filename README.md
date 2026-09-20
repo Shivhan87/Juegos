@@ -128,9 +128,31 @@ la capacidad `downloads` de la plataforma (el visor pide confirmación); en
 cualquier otro sitio —el fichero guardado en el dispositivo, GitHub Pages— usa
 una descarga normal.
 
-Detalles: el micrófono necesita https o el fichero abierto desde el propio
-dispositivo. Si le cambias el nombre a Osito habrá que regrabar las dos frases
-que lo contienen.
+### Dónde hay que abrir el juego para poder grabar
+
+Para **jugar** vale cualquier sitio. Para **grabar** no: los navegadores solo
+entregan el micrófono a una página servida por **https y abierta en su propia
+pestaña**. Ni `http`, ni el fichero suelto (`file://`), ni el juego incrustado
+dentro de otra página —como el visor de artifacts de claude.ai, que no cede el
+micrófono a lo que enmarca—.
+
+La forma más simple de tener esa dirección es **GitHub Pages**, que sirve este
+repositorio tal cual: en GitHub → *Settings* → *Pages* → *Source: Deploy from a
+branch* → la rama por defecto, carpeta `/ (root)`. Un par de minutos después el
+juego está en `https://<usuario>.github.io/Juegos/casa-de-osito/`, y desde ahí el
+navegador ya pregunta por el micrófono.
+
+Cuando algo falla, la grabadora lo diagnostica y lo dice: distingue entre origen
+inseguro, navegador sin `MediaRecorder`, permiso denegado, micrófono ocupado por
+otra aplicación, ausencia de micrófono y bloqueo por la *permissions policy* del
+marco que la contiene, y da las instrucciones concretas de iOS, Android o
+escritorio. Lo que **no** puede hacer —ni esta ni ninguna página— es abrir los
+ajustes del navegador: no existe esa API, y está deliberadamente bloqueada para
+que un sitio no pueda empujarte a concederle permisos. Lo único que puede es
+volver a pedirlo, y si ya se denegó el navegador ni siquiera vuelve a preguntar.
+
+Detalles: si le cambias el nombre a Osito habrá que regrabar las dos frases que
+lo contienen.
 
 ### Ajustes
 

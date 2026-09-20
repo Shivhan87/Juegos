@@ -220,7 +220,12 @@
   .recbtn.on{background:#C62828;animation:pulserec .8s ease-in-out infinite}
   @keyframes pulserec{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
   .recbtn[disabled]{opacity:.45}
-  .recerr{background:#FFF0EA;color:#8A3B23;border-radius:13px;padding:12px;font-size:14px;line-height:1.5;font-weight:600}
+  .recerr{background:#FFF0EA;color:#8A3B23;border-radius:13px;padding:13px;font-size:14px;line-height:1.55;font-weight:600}
+  .recerr .how{margin-top:9px;font-weight:600;opacity:.92}
+  .recerr .how b{font-weight:800}
+  .recerr #recRetry{margin-top:11px;background:#8A3B23;color:#fff;border-radius:11px;padding:11px 18px;font-weight:800;font-size:14px}
+  :root[data-theme="dark"] .recerr #recRetry{background:#F2C0A8;color:#3A231A}
+  @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .recerr #recRetry{background:#F2C0A8;color:#3A231A}}
   :root[data-theme="dark"] .recerr{background:#3A231A;color:#F2C0A8}
   @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .recerr{background:#3A231A;color:#F2C0A8}}
   .vprog{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
@@ -441,7 +446,11 @@
       <h2 class="display">Grabar mi voz</h2>
       <span class="lvlbadge" id="recCount"></span>
     </div>
-    <div class="recerr" id="recErr" hidden></div>
+    <div class="recerr" id="recErr" hidden>
+      <div id="recErrMsg"></div>
+      <div id="recErrHow" class="how"></div>
+      <button id="recRetry" hidden>Volver a pedir permiso</button>
+    </div>
     <div class="chips" id="recGroups"></div>
     <div class="reccard">
       <div class="re" id="recE" aria-hidden="true">🧸</div>
@@ -1312,20 +1321,80 @@
     renderRecGroups(); renderRec();
     askMic();
   }
+  // Una página no puede abrir los ajustes del navegador: no existe esa API, y
+  // está bloqueada a propósito. Lo único honesto es decir con precisión por qué
+  // no hay micrófono y dónde está el interruptor en ese aparato concreto.
+  function plat(){
+    var ua=navigator.userAgent||'';
+    if(/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints>1)) return 'ios';
+    if(/Android/.test(ua)) return 'android';
+    return 'desktop';
+  }
+  function howToAllow(){
+    var pl=plat();
+    if(pl==='ios') return 'En <b>Safari</b>: toca <b>«aA»</b> a la izquierda de la barra de direcciones → <b>Ajustes del sitio web</b> → <b>Micrófono</b> → <b>Permitir</b>.<br>En <b>Chrome para iPhone</b>: app <b>Ajustes</b> de iOS → <b>Chrome</b> → <b>Micrófono</b>.<br>Comprueba también Ajustes → Safari (o Chrome) → Micrófono.';
+    if(pl==='android') return 'Toca el <b>candado 🔒</b> a la izquierda de la dirección → <b>Permisos</b> (o «Configuración del sitio») → <b>Micrófono</b> → <b>Permitir</b>. Después recarga la página.<br>Si ahí no aparece, mira en Ajustes de Android → Aplicaciones → tu navegador → Permisos → Micrófono.';
+    return 'Haz clic en el <b>candado</b> o el icono a la izquierda de la dirección → <b>Micrófono</b> → <b>Permitir</b>, y recarga la página.';
+  }
+  function micFail(msg, how, retry){
+    var err=$('#recErr');
+    err.hidden=false;
+    $('#recBtn').setAttribute('disabled','');
+    $('#recErrMsg').innerHTML=msg;
+    $('#recErrHow').innerHTML=how||'';
+    $('#recRetry').hidden=!retry;
+  }
+  function framed(){ try{ return window.self!==window.top; }catch(e){ return true; } }
+  function policyBlocks(){
+    // Un iframe de otro origen solo cede el micrófono si lo permite explícitamente.
+    try{
+      var fp=document.featurePolicy||document.permissionsPolicy;
+      if(fp && fp.allowsFeature) return !fp.allowsFeature('microphone');
+    }catch(e){}
+    return null;   // el navegador no lo sabe decir
+  }
+
   function askMic(){
     var err=$('#recErr'), btn=$('#recBtn');
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
-      err.hidden=false; btn.setAttribute('disabled','');
-      err.textContent='Este navegador no sabe grabar audio. Prueba con Chrome o Safari actualizados.';
+    err.hidden=true; $('#recRetry').hidden=true;
+
+    if(typeof MediaRecorder==='undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      if(!window.isSecureContext){
+        micFail('Esta página está abierta por <b>http</b>, y los navegadores solo dan el micrófono por <b>https</b>.',
+                'Ábrela por <b>https</b>. Para grabar no vale ni http ni el fichero suelto: los navegadores solo entregan el micrófono en un origen seguro.');
+      }else{
+        micFail('Este navegador no sabe grabar audio.','Prueba con Chrome o Safari actualizados.');
+      }
       return;
     }
+    if(policyBlocks()===true){
+      micFail('El juego está <b>incrustado en otra página</b> que no le cede el micrófono. Esto no depende de tus permisos y no se puede arreglar desde aquí.',
+              'Abre el juego <b>en su propia pestaña y desde una dirección https</b> —con GitHub Pages sale gratis— y ahí sí podrá pedirte el micrófono. Todo lo demás funciona igual aquí: solo la grabación necesita salir del marco.');
+      return;
+    }
+
     navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
       micStream=st; err.hidden=true; btn.removeAttribute('disabled');
-    }).catch(function(){
-      err.hidden=false; btn.setAttribute('disabled','');
-      err.textContent='No hay acceso al micrófono. Dale permiso al navegador y vuelve a entrar aquí. Ojo: el micrófono solo funciona si la página se abre por https o desde el fichero guardado en el dispositivo.';
+    }).catch(function(e){
+      var n=(e && e.name)||'';
+      if(n==='NotFoundError' || n==='DevicesNotFoundError'){
+        micFail('No se ve ningún micrófono en este aparato.','Conecta unos auriculares con micro o prueba desde el móvil.');
+      }else if(n==='NotReadableError' || n==='TrackStartError'){
+        micFail('El micrófono existe pero lo está usando otra aplicación.','Cierra videollamadas, grabadoras o la cámara y vuelve a intentarlo.', true);
+      }else if(n==='NotAllowedError' || n==='PermissionDeniedError' || n==='SecurityError'){
+        if(framed()){
+          micFail('El navegador no da el micrófono a esta página. Como el juego está <b>incrustado dentro de otra</b>, lo más probable es que sea la página de fuera la que no lo cede, y eso no se arregla con tus permisos.',
+                  'Prueba primero <b>«Volver a pedir permiso»</b>. Si no aparece ninguna ventana preguntando, es lo segundo: abre el juego <b>en su propia pestaña y desde una dirección https</b>, y ahí sí podrá pedírtelo.<br><br>Si sí te preguntó y dijiste que no: '+howToAllow(), true);
+        }else{
+          micFail('El micrófono está <b>denegado</b> para esta página.',
+                  'Los navegadores no dejan que una página abra sus ajustes, así que hay que hacerlo a mano:<br>'+howToAllow()+'<br><br>Después vuelve a entrar aquí.', true);
+        }
+      }else{
+        micFail('No se ha podido abrir el micrófono.'+(n?' ('+n+')':''), howToAllow(), true);
+      }
     });
   }
+  $('#recRetry').addEventListener('click', askMic);
   function closeMic(){
     if(recording) stopRec();
     if(micStream){ micStream.getTracks().forEach(function(t){ t.stop(); }); micStream=null; }
